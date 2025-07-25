@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel Admin Lisensi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f2f2f2;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .add-btn {
+      background-color: #28a745;
+      color: white;
+      padding: 10px 20px;
+      margin-bottom: 20px;
+      border: none;
+      border-radius: 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .badge-active {
+      background-color: green;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 5px;
+    }
+
+    .badge-inactive {
+      background-color: red;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 5px;
+    }
+
+    .badge-used {
+      background-color: gray;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 5px;
+    }
+
+    .badge-unused {
+      background-color: blue;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 5px;
+    }
+
+    .toggle-btn {
+      background-color: orange;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 Panel Admin Lisensi</h1>
+
+    <button id="addLicenseBtn" class="add-btn">➕ Tambah Lisensi Baru</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Kode Lisensi</th>
+          <th>Status</th>
+          <th>Digunakan</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="licenseTableBody">
+        <!-- Akan diisi oleh JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const API_BASE = 'https://lecensibacend.vercel.app'; // Ganti jika backend beda port
+
+    async function fetchLicenses() {
+      const res = await fetch(`${API_BASE}/admin/api`);
+      const data = await res.json();
+
+      const tbody = document.getElementById('licenseTableBody');
+      tbody.innerHTML = ''; // kosongkan
+
+      data.forEach(lic => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${lic.key}</td>
+          <td>
+            <span class="${lic.active ? 'badge-active' : 'badge-inactive'}">
+              ${lic.active ? 'Aktif' : 'Nonaktif'}
+            </span>
+          </td>
+          <td>
+            <span class="${lic.used ? 'badge-used' : 'badge-unused'}">
+              ${lic.used ? 'Sudah' : 'Belum'}
+            </span>
+          </td>
+          <td>
+          <button class="toggle-btn" onclick="toggleStatus('${lic.key}')">🔄 Toggle</button>
+          <button class="toggle-btn" style="background-color:red" onclick="deleteLicense('${lic.key}')">🗑️ Delete</button>
+          <button class="toggle-btn" style="background-color:blue" onclick="resetLicense('${lic.key}')">♻️ Reset</button>
+          </td>
+
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function addLicense() {
+      await fetch(`${API_BASE}/admin/add`, { method: 'POST' });
+      fetchLicenses();
+    }
+
+async function toggleStatus(key) {
+  await fetch(`${API_BASE}/admin/toggle`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ key })
+  });
+  fetchLicenses();
+}
+
+async function deleteLicense(key) {
+  await fetch(`${API_BASE}/admin/delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key })
+  });
+  fetchLicenses();
+}
+
+async function resetLicense(key) {
+  await fetch(`${API_BASE}/admin/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key })
+  });
+  fetchLicenses();
+}
+
+
+    document.getElementById('addLicenseBtn').addEventListener('click', addLicense);
+
+    // Load awal
+    fetchLicenses();
+  </script>
+</body>
+</html>
